@@ -4,32 +4,37 @@ const apiUrl =
 const characterSelect = document.getElementById("character-select");
 const characterDetails = document.getElementById("character-details");
 
+function addOptions(characters) {
+  characters.forEach((character) => {
+    const option = document.createElement("option");
+    option.value = character.id;
+    option.text = character.name;
+    characterSelect.appendChild(option);
+  });
+}
+
+function showDetails(character) {
+  characterDetails.innerHTML = `
+    <h2>${character.name}</h2>
+    <img src="${character.thumbnail.path}/portrait_uncanny.${
+    character.thumbnail.extension
+  }" alt="${character.name}">
+    <p>${character.description || "Description non disponible."}</p>
+  `;
+}
+
 fetch(apiUrl)
   .then((response) => response.json())
-  .then((result) => {
-    result.data.results.forEach((character) => {
-      const option = document.createElement("option");
-      option.value = character.id;
-      option.textContent = character.name;
-
-      characterSelect.appendChild(option);
+  .then((data) => {
+    const characters = data.data.results;
+    addOptions(characters);
+    showDetails(characters[0]);
+    characterSelect.addEventListener("change", () => {
+      const selectedId = characterSelect.value;
+      const selectedCharacter = characters.find(
+        (character) => character.id == selectedId
+      );
+      showDetails(selectedCharacter);
     });
-  });
-
-characterSelect.addEventListener("change", () => {
-  const selectedCharacterId = characterSelect.value;
-
-  const characterUrl = `${apiUrl}&id=${selectedCharacterId}`;
-
-  fetch(characterUrl)
-    .then((response) => response.json())
-    .then((result) => {
-      const character = result.data.results[0];
-
-      characterDetails.innerHTML = `
-              <h2>${character.name}</h2>
-              <img src="${character.thumbnail.path}.${character.thumbnail.extension}" alt="${character.name}">
-              <p>${character.description}</p>
-            `;
-    });
-});
+  })
+  .catch((error) => console.error(error));
